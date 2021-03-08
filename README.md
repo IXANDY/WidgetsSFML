@@ -8,7 +8,7 @@ GUI for SFML to use in my uni and personal projects.
 - [ ] CheckBox
 - [ ] ...
 
-#Demo
+# Demo
 
 In demo you can see the example that uses slider, textbox
 and palette to create a simple gui with color systems conversion.
