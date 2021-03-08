@@ -35,6 +35,7 @@ Slider::Slider(const sf::Vector2f &lineSize,
     sliderLine(),
     sliderHandle() {
 
+  changed = false;
   this->value = value;
   this->minValue = minValue;
   this->maxValue = maxValue;
@@ -62,21 +63,34 @@ Slider::Slider(float lineSizeX,
     Slider({lineSizeX, lineSizeY}, {handleSizeX, handleSizeY}, value, minValue, maxValue, valueStep) {
 }
 
+Slider::Slider(const Slider &copy) :
+    Widget(copy.getSize()) {
+  this->changed = copy.changed;
+  this->value = copy.value;
+  this->curState = copy.curState;
+  this->minValue = copy.minValue;
+  this->maxValue = copy.maxValue;
+  this->sliderHandle = copy.sliderHandle;
+  this->sliderLine = copy.sliderLine;
+  this->valueStep = copy.valueStep;
+}
+
 bool Slider::setValue(float value) {
   if (checkValue(value)) {
     float valueByStep = std::round(value / valueStep);
     this->value = valueByStep * valueStep;
     updateHandlePosition();
-    std::cout << this->value << "\n";
+    changed = false;
     return true;
   }
+  changed = false;
   return false;
 }
 
 bool Slider::setValue(const sf::Vector2f &mousePosition) {
-  float valueByWidth = mousePosition.x - this->getPosition().x;
-  float valuePerPixel = this->maxValue / this->getSize().x;
-  float value = valuePerPixel * valueByWidth;
+  float valueByWidth = mousePosition.x - this->getPosition().x - this->getSystemPos().x;
+  float valuePerPixel = (this->maxValue - this->minValue) / this->getSize().x;
+  float value = valuePerPixel * valueByWidth + minValue;
   return setValue(value);
 }
 
@@ -94,7 +108,7 @@ float Slider::getValue() {
 
 void Slider::onMouseMoved(const sf::Event &event) {
   sf::Vector2f handleHalfWidth = {sliderHandle.getSize().x / 2, 0};
-  sf::Vector2f position = this->getPosition() - handleHalfWidth;
+  sf::Vector2f position = this->getPosition() + this->getSystemPos() - handleHalfWidth;
   sf::Vector2f size = this->getSize() + handleHalfWidth * 2.f;
   sf::FloatRect sliderCollider = {position, size};
 
@@ -111,6 +125,8 @@ void Slider::onMouseMoved(const sf::Event &event) {
       }
       case Focused : {
         setValue(mousePosition);
+        changed = true;
+        break;
       }
       default : {
         break;
@@ -123,7 +139,7 @@ void Slider::onMouseMoved(const sf::Event &event) {
 
 void Slider::onMouseButtonPressed(const sf::Event &event) {
   sf::Vector2f handleHalfWidth = {sliderHandle.getSize().x / 2, 0};
-  sf::Vector2f position = this->getPosition() - handleHalfWidth;
+  sf::Vector2f position = this->getPosition() + this->getSystemPos() - handleHalfWidth;
   sf::Vector2f size = this->getSize() + handleHalfWidth * 2.f;
   sf::FloatRect sliderCollider = {position, size};
 
@@ -134,6 +150,7 @@ void Slider::onMouseButtonPressed(const sf::Event &event) {
   if (sliderCollider.contains(mousePosition)) {
     curState = Focused;
     setValue(mousePosition);
+    changed = true;
   } else {
     curState = Idle;
   }
@@ -141,7 +158,7 @@ void Slider::onMouseButtonPressed(const sf::Event &event) {
 
 void Slider::onMouseReleased(const sf::Event &event) {
   sf::Vector2f handleHalfWidth = {sliderHandle.getSize().x / 2, 0};
-  sf::Vector2f position = this->getPosition() - handleHalfWidth;
+  sf::Vector2f position = this->getPosition() + this->getSystemPos() - handleHalfWidth;
   sf::Vector2f size = this->getSize() + handleHalfWidth * 2.f;
   sf::FloatRect sliderCollider = {position, size};
 
@@ -160,9 +177,11 @@ void Slider::onKeyPressed(const sf::Event &event) {
   if (curState == Focused || curState == Hovered) {
     if (event.key.code == sf::Keyboard::Left) {
       setValue(this->getValue() - this->valueStep);
+      changed = true;
     }
     if (event.key.code == sf::Keyboard::Right) {
       setValue(this->getValue() + this->valueStep);
+      changed = true;
     }
   }
 }
@@ -193,9 +212,9 @@ void Slider::handleEvents(const sf::Event &event) {
 
 void Slider::updateHandlePosition() {
   float sliderWidth = sliderLine.getSize().x;
-  float valuePerPixel = this->maxValue / sliderWidth;
+  float valuePerPixel = (this->maxValue - this->minValue) / sliderWidth;
   float handlePosY = sliderHandle.getPosition().y;
-  float handlePosX = this->value / valuePerPixel;
+  float handlePosX = this->value / valuePerPixel - minValue;
 
   sliderHandle.setPosition(handlePosX, handlePosY);
 }
@@ -205,4 +224,10 @@ void Slider::draw(sf::RenderTarget &target, sf::RenderStates states) const {
 
   target.draw(sliderLine, states);
   target.draw(sliderHandle, states);
+}
+float Slider::getMinValue() {
+  return this->minValue;
+}
+float Slider::getMaxValue() {
+  return this->maxValue;
 }

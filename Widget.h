@@ -11,17 +11,18 @@
 class Widget : public sf::Drawable, public sf::Transformable {
 
  private :
-
   sf::Vector2f size;
-  std::unique_ptr<sf::Font> font;
+  sf::Vector2f systemPos;
 
  protected :
 
+  std::unique_ptr<sf::Font> font;
   ~Widget() override;
-  Widget(const sf::Vector2f &);
-  Widget(float, float);
-  void setSize(const sf::Vector2f &);
-  void setSize(float, float);
+  Widget(const Widget &copy);
+  Widget(const sf::Vector2f &size);
+  Widget(float width, float height);
+  void setSize(const sf::Vector2f &size);
+  void setSize(float width, float height);
 
  public:
   enum State {
@@ -30,8 +31,10 @@ class Widget : public sf::Drawable, public sf::Transformable {
     Idle
   };
 
-  void setFont(const std::string &);
-  sf::Vector2f getSize();
+  void loadFont(const std::string &fontPath);
+  sf::Vector2f getSize() const;
+  const sf::Vector2f &getSystemPos();
+  void setSystemPos(const sf::Vector2f &systemPos);
 
 };
 

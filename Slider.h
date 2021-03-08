@@ -31,12 +31,12 @@ class Slider : public Widget {
 
  protected:
 
-  bool setValue(float value);
   bool setValue(const sf::Vector2f &mousePosition);
   bool checkValue(float value);
 
  public:
 
+  bool changed;
   Slider();
   Slider(const sf::Vector2f &lineSize,
          const sf::Vector2f &handleSize,
@@ -44,6 +44,7 @@ class Slider : public Widget {
          float minValue,
          float maxValue,
          float valueStep);
+
   Slider(float lineSizeX,
          float lineSizeY,
          float handleSizeX,
@@ -53,9 +54,13 @@ class Slider : public Widget {
          float maxValue,
          float valueStep);
 
-  void handleEvents(const sf::Event &event);
+  Slider(const Slider &copy);
 
+  void handleEvents(const sf::Event &event);
+  bool setValue(float value);
   float getValue();
+  float getMinValue();
+  float getMaxValue();
 
   enum TextPosition {
     Left,
